@@ -7,7 +7,9 @@
 **Student ID**: KIC-BSCCSAI-251P-036  
 **Date of Submission**: October 2026  
 **Reviewed Research Study**: Duan, J., Gong, Y., Luo, J., & Zhao, Z. (2023). *Air-quality prediction based on the ARIMA-CNN-LSTM combination model optimized by dung beetle optimizer*. *Scientific Reports*, 13(1), Article 12127. https://doi.org/10.1038/s41598-023-36620-4  
-**Technical Appendix (Code)**: [`notebooks/phase1_base_replication.ipynb`](file:///Users/chathurakarunarathna/Desktop/ML%20Assignment/notebooks/phase1_base_replication.ipynb) & [`notebooks/phase2_enhanced_study.ipynb`](file:///Users/chathurakarunarathna/Desktop/ML%20Assignment/notebooks/phase2_enhanced_study.ipynb)
+**GitHub Repository**: https://github.com/chathuradinal/Air-quality-model  
+**Technical Appendix (Code)**: [`notebooks/phase1_base_replication.ipynb`](file:///Users/chathurakarunarathna/Desktop/ML%20Assignment/notebooks/phase1_base_replication.ipynb) & [`notebooks/phase2_enhanced_study.ipynb`](file:///Users/chathurakarunarathna/Desktop/ML%20Assignment/notebooks/phase2_enhanced_study.ipynb)  
+
 
 ---
 
@@ -264,3 +266,124 @@ Penalizing peak under-prediction three times more severely forces the network to
 * Ke, G., Meng, Q., Finley, T., Wang, T., Chen, W., Ma, W., Ye, Q., & Liu, T. Y. (2017). LightGBM: A highly efficient gradient boosting decision tree. *Advances in Neural Information Processing Systems*, 30, 3146–3154.
 * Kingma, D. P., & Ba, J. (2015). Adam: A method for stochastic optimization. In *International Conference on Learning Representations (ICLR)*.
 * Xue, J., & Shen, B. (2022). Dung beetle optimizer: A new meta-heuristic algorithm for global optimization. *The Journal of Supercomputing*, 79(7), 7305–7348. https://doi.org/10.1007/s11227-022-04959-6
+
+---
+
+## 10. Technical Appendix: Reproducibility, GitHub Repository & Execution Guide
+
+### 10.1 GitHub Repository & Source Code Access
+The complete codebase, interactive Jupyter notebooks, preprocessed datasets, and document generation pipelines are publicly available on GitHub:
+* **Repository URL**: **[https://github.com/chathuradinal/Air-quality-model](https://github.com/chathuradinal/Air-quality-model)**
+* **Student Author**: K.W.G.C.D.B. Karunarathne (Student ID: `KIC-BSCCSAI-251P-036`)
+* **Default Branch**: `main`
+
+### 10.2 System Requirements & Environment Setup
+The framework has been tested on macOS (Apple Silicon MPS / CPU), Linux (Ubuntu 22.04 LTS), and Windows 11. A Python 3.10+ runtime is required.
+
+#### Step 1: Clone the Repository
+```bash
+git clone https://github.com/chathuradinal/Air-quality-model.git
+cd Air-quality-model
+```
+
+#### Step 2: Create and Activate a Virtual Environment
+```bash
+# On macOS / Linux:
+python3 -m venv venv
+source venv/bin/activate
+
+# On Windows:
+python -m venv venv
+venv\Scripts\activate
+```
+
+#### Step 3: Install Required Dependencies
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+Key packages installed: `torch>=2.0.0`, `statsmodels>=0.14.0`, `scikit-learn>=1.3.0`, `reportlab>=5.0.0`, `python-docx>=1.1.0`, `matplotlib>=3.7.0`, `seaborn>=0.12.0`, `pymupdf>=1.23.0`.
+
+---
+
+### 10.3 How to Run the Code
+
+The repository provides dual execution modalities (Interactive Jupyter Notebooks or Command-Line Interface scripts) for both implementations:
+
+#### 1. Running the Base Model Replication (Author Paper Replication)
+* **Via Jupyter Notebook**:
+  Launch Jupyter and open [`notebooks/phase1_base_replication.ipynb`](file:///Users/chathurakarunarathna/Desktop/ML%20Assignment/notebooks/phase1_base_replication.ipynb):
+  ```bash
+  jupyter notebook notebooks/phase1_base_replication.ipynb
+  ```
+  Step through all cells to replicate the 80/20 train/test split, Paper Table 1 ARIMA orders, Paper Table 2 DBO boundaries, SVM, RF, and LSTM baselines.
+* **Via Command-Line Interface (CLI)**:
+  ```bash
+  # Run base model replication on Beijing:
+  python main.py --city beijing
+
+  # Run base model replication across all four cities:
+  python run_all_cities.py
+  ```
+
+#### 2. Running the Enhanced Model & Forensic Audit
+* **Via Jupyter Notebook**:
+  Launch Jupyter and open [`notebooks/phase2_enhanced_study.ipynb`](file:///Users/chathurakarunarathna/Desktop/ML%20Assignment/notebooks/phase2_enhanced_study.ipynb):
+  ```bash
+  jupyter notebook notebooks/phase2_enhanced_study.ipynb
+  ```
+  Executes the leak-free 3-way split, completes the full EDA audit table, benchmarks naive persistence, trains the Gradient Boosted Trees alternative, performs Diebold–Mariano tests, and generates peak error breakdowns.
+* **Via Command-Line Interface (CLI)**:
+  ```bash
+  # Run complete Phase 2 empirical audit:
+  python run_phase2_experiments.py
+  ```
+
+#### 3. Recompiling the Coursework Deliverable Documents (PDF & Word)
+To regenerate the formal submission documents from source:
+```bash
+python src/build_documents.py
+```
+This automatically compiles:
+* `reports/technical_review_report.pdf` (Submission-ready academic PDF with 6 tables and 5 figures)
+* `reports/technical_review_report.docx` (Submission-ready styled Microsoft Word document)
+
+---
+
+### 10.4 Repository Code Structure & Module Guide
+
+```text
+Air-quality-model/
+├── configs/
+│   └── config.yaml                     # Model hyperparameters and DBO search bounds
+├── data/                               # Raw hourly monitoring data (4 cities x 9 stations)
+├── processed_data/                     # Aggregated daily AQI series (2,528 days per city)
+├── notebooks/
+│   ├── phase1_base_replication.ipynb   # [BASE MODEL] Exact replication of Duan et al. (2023)
+│   └── phase2_enhanced_study.ipynb     # [ENHANCED MODEL] Forensic audit, 3-way split, DM tests
+├── reports/
+│   ├── technical_review_report.pdf     # [DELIVERABLE] Academic PDF report (Coursework Phase 3)
+│   ├── technical_review_report.docx    # [DELIVERABLE] Editable Microsoft Word document
+│   └── technical_review_report.md      # Master academic markdown text
+├── results/
+│   ├── figures/                        # High-resolution generated charts & diagrams
+│   │   ├── architecture_comparison_workflow.png
+│   │   ├── fig5_raw_aqi.png
+│   │   ├── phase2_test_forecast_overlay.png
+│   │   ├── phase2_scatter_fits.png
+│   │   └── phase2_metrics_barchart.png
+│   └── *.csv                           # Empirical results (EDA, metrics, peak errors, DM tests)
+├── src/
+│   ├── data_loader.py                  # Station reader, daily aggregator, 80/20 & 3-way splits
+│   ├── arima_module.py                 # Box-Jenkins ARIMA fitting, BIC search, residual extraction
+│   ├── cnn_lstm_module.py              # PyTorch 1D-CNN + multi-layer LSTM neural network
+│   ├── dbo_optimizer.py                # Pure NumPy Dung Beetle Optimizer (4 phenotypes)
+│   ├── hybrid_model.py                 # End-to-end ARIMA-DBO-CNN-LSTM combination model
+│   ├── baselines.py                    # Naive persistence, GBDT, Random Forest, SVM, LSTM
+│   ├── evaluation.py                   # RMSE, MAE, R², MAPE, MASE, peak errors, DM tests
+│   └── build_documents.py              # Automated builder for Word and PDF reports
+├── main.py                             # CLI runner for Base Model Replication
+├── run_phase2_experiments.py           # CLI runner for Enhanced Audit Experiments
+├── requirements.txt                    # Python package dependencies
+└── README.md                           # GitHub project documentation & quickstart
+```

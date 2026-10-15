@@ -171,7 +171,7 @@ def generate_docx():
     r_sub.font.color.rgb = RGBColor(74, 85, 104)
 
     # Metadata Box
-    meta_table = doc.add_table(rows=5, cols=2)
+    meta_table = doc.add_table(rows=6, cols=2)
     meta_table.alignment = WD_TABLE_ALIGNMENT.CENTER
     meta_table.autofit = False
     
@@ -180,6 +180,7 @@ def generate_docx():
         ("Module & Programme:", "Machine Learning and Related Applications | BSc (Hons) Computing & AI"),
         ("Awarding Institution:", "National Institute of Business Management (NIBM), Kandy Innovation Centre"),
         ("Reviewed Research Study:", "Duan, J., Gong, Y., Luo, J., & Zhao, Z. (2023). Scientific Reports, 13:12127."),
+        ("GitHub Repository:", "https://github.com/chathuradinal/Air-quality-model"),
         ("Interactive Appendices:", "notebooks/phase1_base_replication.ipynb & notebooks/phase2_enhanced_study.ipynb")
     ]
     for row_idx, (k, v) in enumerate(metadata):
@@ -676,6 +677,39 @@ def generate_docx():
         r_run.font.size = Pt(9.0)
         r_run.font.color.rgb = RGBColor(74, 85, 104)
 
+    # Section 10: Technical Appendix
+    add_sec_heading("10. Technical Appendix: Reproducibility, GitHub Repository & Execution Guide")
+    add_sec_heading("10.1 GitHub Repository & Source Code Access", level=2)
+    add_p("The complete source code, interactive Jupyter notebooks, preprocessed datasets, and document generation scripts are hosted on GitHub at:")
+    add_p("https://github.com/chathuradinal/Air-quality-model", bold_prefix="Repository URL: ")
+    add_p("K.W.G.C.D.B. Karunarathne (Student ID: KIC-BSCCSAI-251P-036)", bold_prefix="Student Author: ")
+    add_p("main", bold_prefix="Default Branch: ")
+
+    add_sec_heading("10.2 System Requirements & Environment Setup", level=2)
+    add_p("1. Clone repository: git clone https://github.com/chathuradinal/Air-quality-model.git")
+    add_p("2. Setup virtual environment: python3 -m venv venv && source venv/bin/activate")
+    add_p("3. Install dependencies: pip install -r requirements.txt (PyTorch, statsmodels, scikit-learn, reportlab, python-docx, matplotlib, pymupdf)")
+
+    add_sec_heading("10.3 How to Run the Code", level=2)
+    add_p("Running Base Model Replication (Paper Replication):", bold_prefix="• ")
+    add_p("Via Jupyter Notebook: Open notebooks/phase1_base_replication.ipynb and execute all cells.")
+    add_p("Via CLI: python main.py --city beijing  (or python run_all_cities.py for all 4 cities).")
+    add_p("Running Enhanced Model & Empirical Audit:", bold_prefix="• ")
+    add_p("Via Jupyter Notebook: Open notebooks/phase2_enhanced_study.ipynb and execute all cells.")
+    add_p("Via CLI: python run_phase2_experiments.py (executes 3-way split, persistence baseline, GBDT, DM tests, and peak breakdown).")
+    add_p("Recompiling Coursework Report Documents:", bold_prefix="• ")
+    add_p("Execute: python src/build_documents.py (recompiles reports/technical_review_report.pdf and reports/technical_review_report.docx).")
+
+    add_sec_heading("10.4 Repository Code Structure & Module Guide", level=2)
+    add_p("src/data_loader.py: Ingestion, linear interpolation, 80/20 and 3-way split logic.")
+    add_p("src/arima_module.py: Box-Jenkins ARIMA fitting, BIC search, residual extraction.")
+    add_p("src/cnn_lstm_module.py: PyTorch Conv1D + multi-layer LSTM neural network.")
+    add_p("src/dbo_optimizer.py: Pure NumPy Dung Beetle Optimizer (4 phenotypes).")
+    add_p("src/hybrid_model.py: End-to-end ARIMA-DBO-CNN-LSTM combination model.")
+    add_p("src/baselines.py: Naive persistence, GBDT, Random Forest, SVM, LSTM.")
+    add_p("src/evaluation.py: RMSE, MAE, R², MAPE, MASE, peak errors, DM tests.")
+    add_p("src/build_documents.py: Automated builder for Word and PDF reports.")
+
     output_path = REPORTS_DIR / "technical_review_report.docx"
     doc.save(str(output_path))
     print(f"Word document successfully saved to: {output_path}")
@@ -729,6 +763,7 @@ def generate_pdf():
         [Paragraph("<b>Module & Programme:</b>", styles['TableCellLeft']), Paragraph("Machine Learning and Related Applications | BSc (Hons) Computing & AI", styles['TableCellLeft'])],
         [Paragraph("<b>Awarding Institution:</b>", styles['TableCellLeft']), Paragraph("National Institute of Business Management (NIBM), Kandy Innovation Centre", styles['TableCellLeft'])],
         [Paragraph("<b>Target Research Study:</b>", styles['TableCellLeft']), Paragraph("Duan, J., Gong, Y., Luo, J., & Zhao, Z. (2023). <i>Scientific Reports</i>, 13:12127.", styles['TableCellLeft'])],
+        [Paragraph("<b>GitHub Repository:</b>", styles['TableCellLeft']), Paragraph("<font color='#1B365D'><b><u>https://github.com/chathuradinal/Air-quality-model</u></b></font>", styles['TableCellLeft'])],
         [Paragraph("<b>Interactive Appendices:</b>", styles['TableCellLeft']), Paragraph("notebooks/phase1_base_replication.ipynb & notebooks/phase2_enhanced_study.ipynb", styles['TableCellLeft'])]
     ]
     meta_t = Table(meta_table_data, colWidths=[120, 395])
@@ -1036,6 +1071,42 @@ def generate_pdf():
     ]
     for r in refs:
         story.append(Paragraph(r, styles['RefEntry']))
+
+    # Section 10: Technical Appendix
+    story.append(Paragraph("10. Technical Appendix: Reproducibility, GitHub Repository & Execution Guide", styles['Heading1Custom']))
+    story.append(Paragraph("<b>10.1 GitHub Repository & Source Code Access:</b><br/>"
+                           "The complete codebase, interactive notebooks, and automated reporting pipelines are hosted at:<br/>"
+                           "&nbsp;&nbsp;&nbsp;&nbsp;<b>Repository URL:</b> <font color='#1B365D'><b><u>https://github.com/chathuradinal/Air-quality-model</u></b></font><br/>"
+                           "&nbsp;&nbsp;&nbsp;&nbsp;<b>Author:</b> K.W.G.C.D.B. Karunarathne (Student ID: KIC-BSCCSAI-251P-036) | <b>Branch:</b> main",
+                           styles['BodyCustom']))
+
+    story.append(Paragraph("<b>10.2 System Requirements & Quickstart:</b><br/>"
+                           "1. Clone repository: <code>git clone https://github.com/chathuradinal/Air-quality-model.git</code><br/>"
+                           "2. Setup environment: <code>python3 -m venv venv && source venv/bin/activate</code><br/>"
+                           "3. Install dependencies: <code>pip install -r requirements.txt</code> (PyTorch, statsmodels, scikit-learn, reportlab, python-docx, matplotlib, pymupdf)",
+                           styles['BodyCustom']))
+
+    story.append(Paragraph("<b>10.3 How to Run the Code:</b><br/>"
+                           "• <b>Base Model Replication (Author Paper Replication):</b><br/>"
+                           "&nbsp;&nbsp;&nbsp;&nbsp;- Via Jupyter: Open <code>notebooks/phase1_base_replication.ipynb</code> and execute cells.<br/>"
+                           "&nbsp;&nbsp;&nbsp;&nbsp;- Via CLI: <code>python main.py --city beijing</code> (or <code>python run_all_cities.py</code> for all 4 cities).<br/>"
+                           "• <b>Enhanced Model & Empirical Audit:</b><br/>"
+                           "&nbsp;&nbsp;&nbsp;&nbsp;- Via Jupyter: Open <code>notebooks/phase2_enhanced_study.ipynb</code> and execute cells.<br/>"
+                           "&nbsp;&nbsp;&nbsp;&nbsp;- Via CLI: <code>python run_phase2_experiments.py</code> (runs 3-way split, persistence, GBDT, DM tests, and peak breakdown).<br/>"
+                           "• <b>Recompiling Formal Coursework Deliverables:</b><br/>"
+                           "&nbsp;&nbsp;&nbsp;&nbsp;- Run: <code>python src/build_documents.py</code> (rebuilds <code>reports/technical_review_report.pdf</code> and <code>reports/technical_review_report.docx</code>).",
+                           styles['BodyCustom']))
+
+    story.append(Paragraph("<b>10.4 Repository Code Structure:</b><br/>"
+                           "• <code>src/data_loader.py</code>: Preprocessing, imputation, and 80/20 & 3-way split logic.<br/>"
+                           "• <code>src/arima_module.py</code>: Box-Jenkins ARIMA fitting, BIC search, residual extraction.<br/>"
+                           "• <code>src/cnn_lstm_module.py</code>: PyTorch Conv1D + multi-layer LSTM neural network.<br/>"
+                           "• <code>src/dbo_optimizer.py</code>: Pure NumPy Dung Beetle Optimizer (4 phenotypes).<br/>"
+                           "• <code>src/hybrid_model.py</code>: End-to-end ARIMA-DBO-CNN-LSTM combination model.<br/>"
+                           "• <code>src/baselines.py</code>: Naive persistence, GBDT, Random Forest, SVM, LSTM.<br/>"
+                           "• <code>src/evaluation.py</code>: RMSE, MAE, R², MAPE, MASE, peak errors, DM tests.<br/>"
+                           "• <code>src/build_documents.py</code>: Automated builder for Word and PDF reports.",
+                           styles['BodyCustom']))
 
     doc.build(story, canvasmaker=NumberedCanvas)
     print(f"Academic PDF successfully saved to: {pdf_path}")
