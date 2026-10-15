@@ -1,0 +1,72 @@
+# Configuration file for ARIMA-DBO-CNN-LSTM project
+# Matches parameters specified in Duan et al. (Scientific Reports 2023)
+
+dataset:
+  raw_data_dir: "data"
+  processed_data_dir: "processed_data"
+  cities:
+    - "beijing"
+    - "chengdu"
+    - "guangzhou"
+    - "wuhan"
+  train_ratio: 0.8
+  test_ratio: 0.2
+  target_column: "AQI"
+
+arima:
+  # Paper Table 1 preset orders:
+  preset_orders:
+    beijing: [3, 1, 1]
+    guangzhou: [2, 1, 2]
+    chengdu: [3, 1, 1]   # or automated BIC selection
+    wuhan: [2, 1, 2]     # or automated BIC selection
+  bic_search:
+    max_p: 5
+    max_d: 2
+    max_q: 5
+
+cnn_lstm_default:
+  # Paper Table 2 ARIMA-CNN-LSTM default parameters:
+  filters: 512
+  kernel_size: 2
+  strides: 1
+  lstm_layers: 3
+  lstm_neurons: 50
+  batch_size: 64
+  epochs: 100
+  learning_rate: 0.2
+  sliding_window: 10
+
+dbo:
+  # Paper Table 2 search space for DBO optimization:
+  population_size: 20
+  max_iterations: 15
+  search_space:
+    sliding_window: [1, 50]
+    lstm_neurons_layer1: [1, 300]
+    lstm_neurons_layer2: [1, 300]
+    lstm_neurons_layer3: [1, 300]
+    filters: [1, 600]
+    kernel_size: [1, 10]
+    strides: [1, 5]
+    learning_rate: [0.001, 0.99]
+    batch_size: [16, 256]
+
+baselines:
+  lstm:
+    neurons1: 50
+    neurons2: 100
+    neurons3: 150
+    batch_size: 64
+    epochs: 100
+    learning_rate: 0.1
+    sliding_window: 10
+  svm:
+    kernel: "linear"
+  rf:
+    n_estimators: 100
+    random_state: 42
+
+output:
+  results_dir: "results"
+  figures_dir: "results/figures"
