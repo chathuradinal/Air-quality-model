@@ -113,5 +113,36 @@ def load_city_split(
     return train_data, test_data, dates
 
 
+def load_three_way_split(
+    city: str,
+    train_ratio: float = 0.70,
+    val_ratio: float = 0.15,
+    processed_dir: str = "processed_data",
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, pd.DatetimeIndex]:
+    """
+    Loads daily series for a city and splits chronologically into 3 distinct sets:
+    Train (70%), Validation (15%), Test (15%).
+    Enforces clean separation between hyperparameter tuning and final testing.
+    """
+    csv_path = os.path.join(processed_dir, f"{city}_daily.csv")
+    if not os.path.exists(csv_path):
+        prepare_and_save_all_cities(cities=[city], processed_dir=processed_dir)
+
+    df = pd.read_csv(csv_path, parse_dates=["date"], index_col="date")
+    series = df["AQI"].values
+    dates = df.index
+
+    n = len(series)
+    n_train = int(n * train_ratio)
+    n_val = int(n * (train_ratio + val_ratio))
+
+    train_data = series[:n_train]
+    val_data = series[n_train:n_val]
+    test_data = series[n_val:]
+
+    return train_data, val_data, test_data, dates
+
+
 if __name__ == "__main__":
     prepare_and_save_all_cities()
+

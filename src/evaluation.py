@@ -1,11 +1,8 @@
-"""
-Evaluation metrics and visualization module for Duan et al. (2023) replication.
-Implements Equations (24), (25), (26): RMSE, MAE, R2, and paper-matching plots (Figs 5, 7, 8).
-"""
-
 import os
+from typing import Optional, Tuple, Dict, Any
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import stats
 
 
 def calculate_rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -27,13 +24,96 @@ def calculate_r2(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return float(1.0 - (ss_res / ss_tot))
 
 
-def calculate_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
-    """Computes all 3 primary evaluation metrics defined in paper."""
+def calculate_mape(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Mean Absolute Percentage Error (MAPE)"""
+    y_true = np.asarray(y_true, dtype=np.float64)
+    y_pred = np.asarray(y_pred, dtype=np.float64)
+    mask = y_true > 0
+    if np.sum(mask) == 0:
+        return 0.0
+    return float(np.mean(np.abs((y_true[mask] - y_pred[mask]) / y_true[mask])) * 100.0)
+
+
+def calculate_mase(y_train: np.ndarray, y_test: np.ndarray, y_pred: np.ndarray) -> float:
+    """
+    Mean Absolute Scaled Error (MASE) (Hyndman & Koehler, 2006).
+    Compares test MAE against the naive in-sample persistence MAE.
+    MASE < 1.0 indicates performance better than the naive baseline.
+    """
+    y_train = np.asarray(y_train, dtype=np.float64)
+    y_test = np.asarray(y_test, dtype=np.float64)
+    y_pred = np.asarray(y_pred, dtype=np.float64)
+    
+    mae_test = np.mean(np.abs(y_test - y_pred))
+    mae_naive_train = np.mean(np.abs(np.diff(y_train)))
+    if mae_naive_train == 0:
+        return float("inf")
+    return float(mae_test / mae_naive_train)
+
+
+def calculate_peak_day_metrics(y_true: np.ndarray, y_pred: np.ndarray, threshold: float = 150.0) -> dict:
+    """
+    Evaluates forecast errors specifically on critical peak pollution days (e.g., AQI >= 150 or AQI >= 300).
+    Addresses regression class imbalance identified in Phase 1 review.
+    """
+    y_true = np.asarray(y_true, dtype=np.float64)
+    y_pred = np.asarray(y_pred, dtype=np.float64)
+    mask = y_true >= threshold
+    count = int(np.sum(mask))
+    if count == 0:
+        return {"Count": 0, "RMSE": None, "MAE": None}
     return {
+        "Count": count,
+        "RMSE": round(calculate_rmse(y_true[mask], y_pred[mask]), 3),
+        "MAE": round(calculate_mae(y_true[mask], y_pred[mask]), 3),
+    }
+
+
+def diebold_mariano_test(e1: np.ndarray, e2: np.ndarray, h: int = 1) -> dict:
+    """
+    Diebold-Mariano test for equal predictive accuracy of two forecast error series e1 and e2.
+    e1: errors of benchmark (e.g. Persistence or ARIMA) = y_true - y_pred_bench
+    e2: errors of proposed model = y_true - y_pred_model
+    Loss differential d_t = e1_t^2 - e2_t^2 (or absolute loss).
+    Returns DM statistic and two-tailed p-value.
+    A positive DM statistic with p < 0.05 indicates e2 has significantly smaller errors than e1.
+    """
+    from scipy import stats
+    d = np.asarray(e1, dtype=np.float64)**2 - np.asarray(e2, dtype=np.float64)**2
+    n = len(d)
+    mean_d = np.mean(d)
+    # Autocovariance adjustment for h-step ahead forecasts
+    gamma_0 = np.var(d, ddof=1)
+    var_d = gamma_0
+    for lag in range(1, h):
+        gamma_k = np.mean((d[lag:] - mean_d) * (d[:-lag] - mean_d))
+        var_d += 2.0 * gamma_k
+
+    if var_d <= 0 or np.isnan(var_d):
+        se_d = 1e-8
+    else:
+        se_d = np.sqrt(var_d / n)
+
+    dm_stat = mean_d / se_d
+    p_value = 2.0 * (1.0 - stats.norm.cdf(np.abs(dm_stat)))
+    return {
+        "DM_Stat": round(float(dm_stat), 4),
+        "p_value": round(float(p_value), 6),
+        "significant_p05": bool(p_value < 0.05),
+    }
+
+
+def calculate_metrics(y_true: np.ndarray, y_pred: np.ndarray, y_train: Optional[np.ndarray] = None) -> dict:
+    """Computes full suite of evaluation metrics (both standard and Phase 1 enhanced)."""
+    res = {
         "RMSE": round(calculate_rmse(y_true, y_pred), 3),
         "MAE": round(calculate_mae(y_true, y_pred), 3),
         "R2": round(calculate_r2(y_true, y_pred), 3),
+        "MAPE": round(calculate_mape(y_true, y_pred), 2),
     }
+    if y_train is not None:
+        res["MASE"] = round(calculate_mase(y_train, y_true, y_pred), 3)
+    return res
 
 
 def plot_raw_aqi_all_cities(daily_series_dict: dict, save_path: str = "results/figures/fig5_raw_aqi.png"):

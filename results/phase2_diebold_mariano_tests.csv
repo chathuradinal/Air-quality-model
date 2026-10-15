@@ -1,0 +1,5 @@
+Comparison,DM_Statistic,p_value,Statistically_Significant (p < 0.05),Conclusion
+Proposed vs. Persistence,0.6255,0.53161,False,No statistically significant difference
+"Proposed vs. ARIMA(3,1,1)",-2.6668,0.007657,True,No statistically significant difference
+Proposed vs. Random Forest,1.0262,0.304789,False,No statistically significant difference
+Proposed vs. Gradient Boosting,0.3788,0.704847,False,No statistically significant difference

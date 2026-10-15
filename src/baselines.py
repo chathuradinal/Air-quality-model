@@ -20,11 +20,81 @@ from typing import Tuple, Optional, List
 
 from src.arima_module import ARIMAForecaster
 from src.utils import MinMaxNormalizer, create_sliding_windows
+from sklearn.ensemble import GradientBoostingRegressor
+
+try:
+    import lightgbm as lgb
+except (ImportError, OSError):
+    lgb = None
 
 
 # -------------------------------------------------------------
-# 1. Traditional ML Baselines: SVM and Random Forest
+# 0. Naive Persistence Baseline (Phase 1 Essential Benchmark)
 # -------------------------------------------------------------
+class PersistenceBaseline:
+    """
+    Naive persistence forecast: y_hat_t = y_{t-1}.
+    Essential sanity check benchmark identified in Phase 1 review.
+    """
+    def __init__(self):
+        self.last_train_val = None
+
+    def fit(self, train_data: np.ndarray):
+        self.last_train_val = float(train_data[-1])
+        return self
+
+    def predict(self, test_data: np.ndarray) -> np.ndarray:
+        test_data = np.asarray(test_data, dtype=np.float64)
+        return np.concatenate([[self.last_train_val], test_data[:-1]])
+
+
+# -------------------------------------------------------------
+# 1. Traditional ML Baselines: SVM, Random Forest, Gradient Boosting
+# -------------------------------------------------------------
+class GradientBoostingBaseline:
+    """
+    Proposed alternative: Gradient Boosted Decision Trees on lag features.
+    Tests whether a fast boosted tree model matches or beats deep neural nets.
+    Uses LightGBM if libomp is available, else sklearn GradientBoostingRegressor.
+    """
+    def __init__(self, window_size: int = 10, n_estimators: int = 100, learning_rate: float = 0.05):
+        self.window_size = window_size
+        self.n_estimators = n_estimators
+        self.learning_rate = learning_rate
+        self.model = None
+        self.train_data = None
+
+    def fit(self, train_data: np.ndarray):
+        self.train_data = np.asarray(train_data, dtype=np.float64)
+        X, y = create_sliding_windows(self.train_data, self.window_size)
+        X_flat = X.squeeze(-1) if X.ndim == 3 else X
+
+        if lgb is not None:
+            self.model = lgb.LGBMRegressor(
+                n_estimators=self.n_estimators,
+                learning_rate=self.learning_rate,
+                random_state=42,
+                verbose=-1,
+            )
+        else:
+            self.model = GradientBoostingRegressor(
+                n_estimators=self.n_estimators,
+                learning_rate=self.learning_rate,
+                random_state=42,
+            )
+        self.model.fit(X_flat, y)
+        return self
+
+    def predict(self, test_data: np.ndarray) -> np.ndarray:
+        full_series = np.concatenate([self.train_data, test_data])
+        test_start = len(self.train_data)
+        X_test = []
+        for i in range(test_start, len(full_series)):
+            X_test.append(full_series[i - self.window_size : i])
+        X_test = np.array(X_test, dtype=np.float32)
+        return self.model.predict(X_test)
+
+
 class SVMBaseline:
     def __init__(self, window_size: int = 10):
         self.window_size = window_size
