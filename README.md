@@ -1,128 +1,116 @@
-# Air Quality Prediction: ARIMA-DBO-CNN-LSTM Combination Model
+# Air Quality Prediction: Base Model Replication & Enhanced Forensic Study
 
-This project is a reproduction and production-grade implementation of the research paper:
-> **Title**: *Air-quality prediction based on the ARIMA-CNN-LSTM combination model optimized by dung beetle optimizer*  
-> **Authors**: Jiahui Duan, Yaping Gong, Jun Luo, and Zhiyao Zhao  
-> **Journal**: *Scientific Reports* (Nature Portfolio), 2023, 13:12127  
-> **DOI**: [10.1038/s41598-023-36620-4](https://doi.org/10.1038/s41598-023-36620-4)  
-> **PDF**: [`s41598-023-36620-4 (2)(1).pdf`](./s41598-023-36620-4%20(2)(1).pdf)
+**Coursework Project**: Machine Learning and Related Applications  
+**Institution**: National Institute of Business Management (NIBM), Kandy Innovation Centre  
+**Student Name**: K.W.G.C.D.B. Karunarathne (Student ID: `KIC-BSCCSAI-251P-036`)  
+**Target Research Study**: Duan, J., Gong, Y., Luo, J., & Zhao, Z. (2023). *Air-quality prediction based on the ARIMA-CNN-LSTM combination model optimized by dung beetle optimizer*. *Scientific Reports*, 13(1), Article 12127. [DOI: 10.1038/s41598-023-36620-4](https://doi.org/10.1038/s41598-023-36620-4)
 
 ---
 
-## 1. Overview & Architecture
+## 1. Project Organization: Base Model vs. Enhanced Model
 
-Air quality time series contain both **linear trends/seasonality** and **highly non-linear environmental disturbances**. Single statistical models (e.g., pure ARIMA) fail on nonlinear dynamics, while standard deep neural networks (e.g., pure LSTM) suffer from blind hyperparameter selection and linear trend distortion.
-
-The proposed framework solves this via an **additive hybrid model**:
-$$x_t = L_t + N_t$$
-
-1. **Linear Modeling**: An $\text{ARIMA}(p, d, q)$ model fits the linear component $L_t$. Parameters $(p, d, q)$ are determined via the Bayesian Information Criterion (BIC).
-2. **Residual Extraction**: The non-linear component is isolated as residuals:
-   $$e_t = x_t - \hat{L}_t$$
-3. **Hyperparameter Optimization via DBO**: The **Dung Beetle Optimizer (DBO)** (Xue & Shen, 2022) optimizes the CNN-LSTM architecture across 7 continuous/discrete hyperparameters (window size, neurons per layer, filters, kernel size, strides, learning rate) using 4 biological behaviors (ball-rolling, dancing, breeding, foraging, stealing).
-4. **Non-linear Sequence Modeling**: A PyTorch **Conv1D-LSTM** network is trained on the residual series to forecast $\hat{e}_t$.
-5. **Ensemble Reconstruction**:
-   $$\hat{x}_t = \hat{L}_t + \hat{e}_t$$
-
----
-
-## 2. Directory Structure
+This repository is structured into two clearly demarcated implementations, accompanied by a comprehensive technical review report that compares them:
 
 ```text
 ML Assignment/
-├── configs/
-│   └── config.yaml                     # Model hyperparameters and DBO search bounds
-├── data/                               # Raw hourly monitoring stations (4 cities x 9 stations)
-│   ├── beijing/
-│   ├── chengdu/
-│   ├── guangzhou/
-│   └── wuhan/
-├── processed_data/                     # Aggregated daily AQI series (2,528 days per city)
-│   ├── beijing_daily.csv
-│   ├── chengdu_daily.csv
-│   ├── guangzhou_daily.csv
-│   └── wuhan_daily.csv
-├── results/                            # Benchmark metrics & figures
-│   ├── figures/                        # Generated charts matching paper figures
-│   │   ├── fig5_raw_aqi.png            # Paper Figure 5: Raw AQI series
-│   │   ├── beijing_model_comparison.png # Paper Figure 7/8: Time series & scatter fitting
-│   │   └── beijing_metrics_barchart.png # Paper Figure 7a/8a: Metric bar charts
-│   └── beijing_metrics.csv             # Metrics table (RMSE, MAE, R2)
-├── src/
-│   ├── __init__.py
-│   ├── data_loader.py                  # Station reader, daily aggregator, imputation, splits
-│   ├── arima_module.py                 # ARIMA BIC selection, linear fitting, residual extraction
-│   ├── cnn_lstm_module.py              # PyTorch Conv1D + multi-layer LSTM neural network
-│   ├── dbo_optimizer.py                # Pure Python/NumPy Dung Beetle Optimizer (4 behaviors)
-│   ├── hybrid_model.py                 # ARIMA-DBO-CNN-LSTM end-to-end pipeline
-│   ├── baselines.py                    # SVM, Random Forest, standalone LSTM implementations
-│   ├── evaluation.py                   # RMSE, MAE, R2 calculation and plotting utilities
-│   └── utils.py                        # Reproducibility seed setup, MinMax scaling, sliding window
-├── main.py                             # Single city training & evaluation CLI
-├── run_all_cities.py                   # Batch script for all 4 cities
-├── requirements.txt                    # Project dependencies
-└── README.md                           # Documentation
+├── notebooks/
+│   ├── phase1_base_replication.ipynb      # [BASE MODEL] Exact replication of Duan et al. (80/20 split, Table 1 & 2)
+│   └── phase2_enhanced_study.ipynb        # [ENHANCED MODEL] Forensic audit, 3-way split, baselines, DM tests, peak breakdown
+├── reports/
+│   ├── technical_review_report.pdf        # [PHASE 3 REPORT] Submission-ready 6-page Academic PDF (Coursework deliverable)
+│   ├── technical_review_report.docx       # [PHASE 3 REPORT] Editable Microsoft Word Document
+│   └── technical_review_report.md         # Master academic text with formulas & citations (~4,500 words)
+├── src/                                   # Core modular codebase
+│   ├── data_loader.py                     # 9 stations aggregation, 80/20 and 3-way chronological splits
+│   ├── arima_module.py                    # ARIMA(p, d, q) Box-Jenkins modeling & residual extraction
+│   ├── cnn_lstm_module.py                 # PyTorch 1D-CNN + multi-layer LSTM neural network
+│   ├── dbo_optimizer.py                   # Pure Python Dung Beetle Optimizer (all 4 biological behaviors)
+│   ├── hybrid_model.py                    # End-to-end ARIMA-DBO-CNN-LSTM combination model
+│   ├── baselines.py                       # Naive persistence, GBDT, Random Forest, Linear SVM, Standalone LSTM
+│   ├── evaluation.py                      # RMSE, MAE, R², MAPE, MASE, peak error bands, Diebold-Mariano tests
+│   └── build_documents.py                 # Script generating the submission PDF and DOCX reports
+├── main.py                                # CLI entry point for the Base Model Replication
+├── run_phase2_experiments.py              # CLI entry point for the Enhanced Empirical Audit
+└── results/                               # Cached metrics CSVs and high-resolution comparison figures
 ```
 
 ---
 
-## 3. Installation & Setup
+## 2. Model Implementations Breakdown
 
-1. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### A. Base Model Implementation (Author Replication)
+* **Interactive Notebook**: [`notebooks/phase1_base_replication.ipynb`](file:///Users/chathurakarunarathna/Desktop/ML%20Assignment/notebooks/phase1_base_replication.ipynb)
+* **Execution Script**: `python main.py --city beijing`
+* **Methodology**:
+  * Exact 80% Train / 20% Test chronological split across 2,528 daily AQI observations (2014–2020).
+  * Figure 5 replication showing daily AQI trajectories across Beijing, Chengdu, Guangzhou, and Wuhan.
+  * Linear $\text{ARIMA}(p, d, q)$ modeling using the optimal orders from **Table 1** of the paper:
+    * Beijing: $\text{ARIMA}(3, 1, 1)$
+    * Chengdu: $\text{ARIMA}(3, 1, 1)$
+    * Guangzhou: $\text{ARIMA}(2, 1, 2)$
+    * Wuhan: $\text{ARIMA}(2, 1, 2)$
+  * Extraction of residual sequence $e_t = x_t - \hat{L}_t$ with sliding lag window $w = 10$.
+  * Dung Beetle Optimizer (DBO) searching the 7 hyperparameter dimensions within the boundaries of **Table 2**.
+  * 1D-CNN + LSTM deep neural network modeling the non-linear residual sequence.
+  * Additive reconstruction: $\hat{x}_t = \hat{L}_t + \hat{e}_t$.
+  * Comparative baselines from the paper: Linear SVM, Random Forest, Standalone LSTM, and Pure ARIMA.
 
-2. **Verify Hardware Accelerator**:
-   PyTorch will automatically utilize Apple Silicon GPU acceleration (`mps`), NVIDIA CUDA (`cuda`), or fall back to `cpu`.
+### B. Enhanced Model Implementation (Audit & Proposed Enhancements)
+* **Interactive Notebook**: [`notebooks/phase2_enhanced_study.ipynb`](file:///Users/chathurakarunarathna/Desktop/ML%20Assignment/notebooks/phase2_enhanced_study.ipynb)
+* **Execution Script**: `python run_phase2_experiments.py`
+* **Methodology & Enhancements**:
+  * **Leak-Free 3-Way Split**: 70% Train, 15% Validation, 15% Test with scalers fitted strictly on training data.
+  * **Exploratory Data Analysis Table**: Completed descriptive stats, Shapiro-Wilk normality tests ($p < 10^{-30}$), and ADF stationarity tests ($p < 10^{-5}$) across all 4 cities.
+  * **Mandatory Naive Persistence Benchmark**: Implementing $\hat{y}_t = x_{t-1}$ to test whether deep models beat atmospheric inertia.
+  * **Proposed Machine Learning Alternative**: Gradient Boosted Decision Trees (GBDT / LightGBM) on 10 lag features.
+  * **Scale-Free Metrics**: Evaluation via Mean Absolute Scaled Error (MASE) and Mean Absolute Percentage Error (MAPE).
+  * **Peak-Day Extreme Event Breakdown**: Error stratification across $\text{AQI} \ge 100$, $\ge 150$, and $\ge 200$.
+  * **Diebold–Mariano Statistical Hypothesis Testing**: Formal $p$-value tests verifying whether performance differences are statistically significant.
+  * **Stress-Testing**: Gaussian jitter noise injection ($\sigma \in \{0.05, 0.10, 0.20\}$) and multi-pollutant dimensionality analysis.
 
 ---
 
-## 4. Usage & Running Experiments
+## 3. Master Empirical Comparison Summary (Beijing Test Horizon)
 
-### Running for a Single City (e.g., Beijing)
+| Model Architecture | Parameters | Training Time | RMSE | MAE | $R^2$ | MAPE (%) | MASE | Status in Repo |
+|---|---|---|---|---|---|---|---|---|
+| **Author Claimed Hybrid (Paper)** | $> 110,000$ | *Unreported* | **14.940** | **10.839** | **0.962** | *Unreported* | *Unreported* | Literature Reference |
+| **Audited Hybrid (Honest Split)** | $112,450$ | 1,480.2 s | **35.980** | **22.899** | **0.388** | **35.57%** | **0.596** | **Enhanced Model** |
+| **Pure ARIMA(3, 1, 1)** | 5 | 0.24 s | 34.633 | 22.935 | 0.433 | 41.80% | 0.597 | Both Models |
+| **Naive Persistence ($\hat{y}_t = x_{t-1}$)** | 0 | 0.00 s | 37.473 | 23.361 | 0.336 | 41.83% | 0.608 | **Enhanced Benchmark** |
+| **Gradient Boosted Trees (Alt. 1)** | 100 trees | 0.42 s | 36.420 | 25.490 | 0.373 | 54.63% | 0.664 | **Proposed Alternative** |
+| **Random Forest Regressor** | 100 trees | 1.18 s | 37.265 | 25.447 | 0.343 | 51.46% | 0.663 | Both Models |
+| **Linear Support Vector Machine** | 11 | 0.08 s | 38.939 | 31.110 | 0.283 | 72.63% | 0.810 | Both Models |
+
+### Statistical Significance (Diebold–Mariano Tests)
+* **Audited Hybrid vs. Naive Persistence**: $\text{DM} = +0.6255, p = 0.5316 \implies$ The 110k-parameter hybrid is **not** statistically significantly better than trivial persistence.
+* **Audited Hybrid vs. Pure ARIMA**: $\text{DM} = -2.6668, p = 0.0077 \implies$ Pure ARIMA is **statistically superior** ($p < 0.01$) to the complex hybrid.
+
+---
+
+## 4. Quickstart: Running the Code
+
+### Setup Environment
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### Run Base Model Replication
 ```bash
 python main.py --city beijing
-```
-
-Optional arguments:
-- `--dbo_pop 15`: Population size for Dung Beetle Optimizer (default: 15)
-- `--dbo_iter 10`: Number of iterations for DBO (default: 10)
-- `--device mps`: Manually specify device (`mps`, `cpu`, `cuda`)
-
-### Running for Other Cities
-```bash
-python main.py --city guangzhou
-python main.py --city chengdu
-python main.py --city wuhan
-```
-
-### Running Batch Benchmark Across All 4 Cities
-```bash
+# Or run across all cities:
 python run_all_cities.py
 ```
-This generates `results/master_comparison_all_cities.csv` summarizing comparative metrics across all cities.
 
----
+### Run Enhanced Audit Experiments
+```bash
+python run_phase2_experiments.py
+```
 
-## 5. Comparative Evaluation Models (A to J)
-
-| Label | Model | Description |
-|---|---|---|
-| **A** | **SVM** | Support Vector Regression with linear kernel |
-| **B** | **RF** | Random Forest Regressor (100 estimators) |
-| **C** | **ARIMA** | Pure ARIMA statistical linear model |
-| **D** | **LSTM** | Standalone 3-layer LSTM (50-100-150 neurons) |
-| **E** | **ARIMA-CNN-LSTM** | ARIMA + default CNN-LSTM on residuals (without DBO) |
-| **J** | **ARIMA-DBO-CNN-LSTM** | **Proposed Paper Model** (ARIMA + DBO-optimized CNN-LSTM) |
-
----
-
-## 6. Target Metrics (Reported in Duan et al., 2023)
-
-| City | ARIMA-DBO-CNN-LSTM RMSE | ARIMA-DBO-CNN-LSTM MAE | ARIMA-DBO-CNN-LSTM $R^2$ |
-|---|---|---|---|
-| **Beijing** | 14.940 | 10.839 | 0.962 |
-| **Guangzhou** | 5.496 | 3.770 | 0.953 |
-| **Chengdu / Jiaozuo** | 7.594 | 5.285 | 0.989 |
-| **Wuhan / Lanzhou** | 7.841 | 5.120 | 0.953 |
+### Recompile Coursework Reports (PDF & Word)
+```bash
+python src/build_documents.py
+```
+Outputs are written to [`reports/technical_review_report.pdf`](file:///Users/chathurakarunarathna/Desktop/ML%20Assignment/reports/technical_review_report.pdf) and [`reports/technical_review_report.docx`](file:///Users/chathurakarunarathna/Desktop/ML%20Assignment/reports/technical_review_report.docx).
